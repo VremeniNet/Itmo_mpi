@@ -1,0 +1,115 @@
+@startuml
+title Диаграмма пользовательских сценариев\nДоступное веб-приложение для геймификации АиСД
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 55
+
+actor "Студент" as Student
+actor "Преподаватель" as Teacher
+actor "Администратор" as Admin
+
+rectangle "Система: доступное веб-приложение для геймификации\nдисциплины «Алгоритмы и структуры данных»" {
+
+  '
+  usecase "Управлять аккаунтом\n(регистрация/вход/сброс/выход)" as UC_Account
+  usecase "Проверить роль и права\n(доступ)" as UC_RBAC
+  UC_Account ..> UC_RBAC : <<include>>
+
+  note right of UC_RBAC
+    Доступ определяется ролью:
+    • Студент
+    • Преподаватель
+    • Администратор
+  end note
+
+  ' 
+  usecase "Выполнить задание" as UC_DoTask
+  usecase "Получить обратную связь\n(автопроверка)" as UC_Check
+  usecase "Сохранить результат\n(попытка/статус)" as UC_Save
+  UC_DoTask ..> UC_Check : <<include>>
+  UC_Check ..> UC_Save : <<include>>
+
+  note right of UC_Check
+    Результат включает:
+    • статус (успех/ошибки)
+    • комментарии/подсказки
+  end note
+
+  '
+  usecase "Обновить прогресс и награды\n(очки/уровень/достижения)" as UC_Rewards
+  UC_Rewards ..> UC_Check : <<extend>>
+
+  note right of UC_Rewards
+    Условие:
+    <попытка успешна>
+    Достижение:
+    <выполнены критерии>
+  end note
+
+  usecase "Рейтинг и видимость" as UC_Leaderboard
+  UC_Leaderboard ..> UC_Rewards : <<extend>>
+
+  note right of UC_Leaderboard
+    Условие:
+    <пользователь разрешил показывать себя>
+  end note
+
+  '
+  usecase "Управлять контентом\n(задания/темы/публикация)" as UC_Content
+
+  note right of UC_Content
+    Включает:
+    • создать/редактировать задание
+    • темы/структура
+    • параметры (тип/сложность/лимиты)
+    • подсказки/материалы
+    • публиковать/скрывать
+  end note
+
+  ' 
+  usecase "Просмотр аналитики и отчётов" as UC_Analytics
+  note right of UC_Analytics
+    • студент: личная статистика
+    • преподаватель: статистика по студентам
+    • выгрузка отчёта (CSV/PDF)
+    • админ: журналы событий
+  end note
+
+  '
+  usecase "Настроить доступность интерфейса" as UC_A11y
+  note right of UC_A11y
+    • клавиатура + видимый фокус
+    • скринридер-совместимость
+    • масштаб/контраст/reduce motion
+  end note
+
+  '
+  usecase "Администрирование\n(роли/блокировки/журналы)" as UC_Admin
+  note right of UC_Admin
+    • назначить/изменить роль
+    • блок/разблок пользователя
+    • просмотр журналов
+    • мониторинг/настройки (опционально)
+  end note
+}
+
+'
+Student --> UC_Account
+Student --> UC_DoTask
+Student --> UC_Leaderboard
+Student --> UC_Analytics
+Student --> UC_A11y
+
+Teacher --> UC_Account
+Teacher --> UC_Content
+Teacher --> UC_Analytics
+
+Admin --> UC_Account
+Admin --> UC_Admin
+Admin --> UC_Analytics
+
+@enduml
