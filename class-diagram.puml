@@ -1,0 +1,109 @@
+@startuml
+title Диаграмма классов
+
+skinparam shadowing false
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 12
+hide circle
+hide empty members
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum TaskType {
+  QUIZ
+  INPUT
+  MATCHING
+  OTHER
+}
+
+class User {
+  +id: UUID
+  +login: String
+  +role: Role
+  +status: String  ' active/blocked
+  +a11yPrefs: JSON ' contrast/scale/reduceMotion/simpleUI
+}
+
+class Topic {
+  +id: UUID
+  +title: String
+  +order: Int
+}
+
+class Task {
+  +id: UUID
+  +title: String
+  +type: TaskType
+  +difficulty: Int
+  +isPublished: Boolean
+  +params: JSON   ' лимиты/настройки проверки
+}
+
+class Attempt {
+  +id: UUID
+  +startedAt: DateTime
+  +submittedAt: DateTime
+  +answer: JSON
+  +status: String     ' draft/submitted/checked
+  +isCorrect: Boolean
+  +score: Int
+  +feedback: Text
+}
+
+class Progress {
+  +id: UUID
+  +percent: Float
+  +totalPoints: Int
+  +level: Int
+  +updatedAt: DateTime
+}
+
+class Achievement {
+  +id: UUID
+  +title: String
+  +rule: JSON   ' критерии/условия
+}
+
+class UserAchievement {
+  +userId: UUID
+  +achievementId: UUID
+  +grantedAt: DateTime
+}
+
+class LeaderboardEntry {
+  +userId: UUID
+  +rank: Int
+  +points: Int
+  +isVisible: Boolean
+  +updatedAt: DateTime
+}
+
+class AuditEvent {
+  +id: UUID
+  +eventType: String
+  +occurredAt: DateTime
+  +actorUserId: UUID
+  +context: JSON
+}
+
+'
+Topic "1" o-- "*" Task
+User "1" -- "*" Attempt
+Task "1" -- "*" Attempt
+
+User "1" -- "*" Progress
+Topic "0..1" -- "*" Progress
+
+User "1" -- "*" UserAchievement
+Achievement "1" -- "*" UserAchievement
+
+User "1" -- "0..1" LeaderboardEntry
+
+User "1" -- "*" AuditEvent
+
+@enduml
