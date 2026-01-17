@@ -1,0 +1,43 @@
+@startuml
+title Преподаватель создаёт и публикует задание
+
+actor "Преподаватель" as Teacher
+boundary "Web UI" as UI
+control "Auth API" as Auth
+control "Teacher Content API" as Content
+database "DB" as DB
+
+Teacher -> UI: Войти в систему
+UI -> Auth: POST /login
+Auth -> DB: Проверка учётных данных
+DB --> Auth: OK
+Auth --> UI: 200 OK + session
+
+Teacher -> UI: Открыть панель управления заданиями
+UI -> Content: GET /teacher/tasks
+Content -> DB: Получить список созданных заданий
+DB --> Content: Список
+Content --> UI: Список
+
+Teacher -> UI: Создать новое задание (FR-7)
+UI -> Content: POST /teacher/tasks (описание, тема, тип, сложность, ограничения) (FR-8, FR-9)
+Content -> DB: Сохранить черновик задания
+DB --> Content: taskId
+Content --> UI: Задание создано (draft)
+
+opt Добавить подсказки/теорию (FR-10 SHOULD)
+  Teacher -> UI: Добавить подсказки/материал
+  UI -> Content: PATCH /teacher/tasks/{taskId} (hints/materials)
+  Content -> DB: Обновить задание
+  DB --> Content: OK
+  Content --> UI: OK
+end
+
+Teacher -> UI: Опубликовать задание (FR-7)
+UI -> Content: POST /teacher/tasks/{taskId}/publish
+Content -> DB: Изменить статус публикации
+DB --> Content: OK
+Content --> UI: 200 OK
+UI --> Teacher: Задание опубликовано и доступно студентам
+
+@enduml

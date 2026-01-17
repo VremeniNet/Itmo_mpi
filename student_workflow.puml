@@ -1,0 +1,51 @@
+@startuml
+title Студент выполняет задание и получает награды
+
+actor "Студент" as Student
+boundary "Web UI" as UI
+control "Auth API" as Auth
+control "Tasks API" as Tasks
+control "Checker Service" as Checker
+control "Gamification Service" as Game
+database "DB" as DB
+
+Student -> UI: Открыть страницу входа
+UI -> Auth: POST /login (email/username, password)
+Auth -> DB: Проверка пользователя и хеша пароля
+DB --> Auth: OK / Fail
+
+alt Успешная аутентификация
+  Auth --> UI: 200 OK + token/session
+  UI --> Student: Показать список тем/заданий (FR-12)
+
+  Student -> UI: Открыть список заданий по теме
+  UI -> Tasks: GET /topics/{id}/tasks
+  Tasks -> DB: Получить задания + статусы (FR-12)
+  DB --> Tasks: Список
+  Tasks --> UI: Список заданий со статусами
+
+  Student -> UI: Открыть задание
+  UI -> Tasks: GET /tasks/{taskId}
+  Tasks -> DB: Получить условие/параметры (FR-13)
+  DB --> Tasks: Данные задания
+  Tasks --> UI: Данные задания
+
+  Student -> UI: Отправить ответ (FR-13)
+  UI -> Tasks: POST /tasks/{taskId}/submit (answer)
+  Tasks -> DB: Сохранить попытку (FR-15)
+  Tasks -> Checker: Проверить ответ (FR-14)
+  Checker --> Tasks: Верно/Неверно + feedback
+
+  Tasks -> Game: Начислить очки/уровень/достижения (FR-17..FR-20)
+  Game -> DB: Обновить прогресс/очки/уровень/achievements
+  DB --> Game: OK
+  Game --> Tasks: Итоги начисления
+
+  Tasks --> UI: Результат + обратная связь + очки/достижения
+  UI --> Student: Показать результат и прогресс (FR-23)
+else Ошибка входа
+  Auth --> UI: 401 Unauthorized
+  UI --> Student: Сообщение об ошибке входа
+end
+
+@enduml

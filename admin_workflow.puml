@@ -1,0 +1,43 @@
+@startuml
+title Администратор блокирует пользователя и фиксирует событие
+
+actor "Администратор" as Admin
+boundary "Admin Web UI" as UI
+control "Auth API" as Auth
+control "Admin API" as AdminAPI
+database "DB" as DB
+database "Audit Log" as Log
+
+Admin -> UI: Войти как администратор
+UI -> Auth: POST /login
+Auth -> DB: Проверка данных + роль (FR-4)
+DB --> Auth: OK (роль Admin)
+Auth --> UI: 200 OK
+
+Admin -> UI: Открыть список пользователей
+UI -> AdminAPI: GET /admin/users
+AdminAPI -> DB: Запрос пользователей
+DB --> AdminAPI: Список
+AdminAPI --> UI: Список пользователей
+
+Admin -> UI: Заблокировать пользователя (FR-6)
+UI -> AdminAPI: POST /admin/users/{userId}/block
+AdminAPI -> DB: Установить статус "blocked"
+DB --> AdminAPI: OK
+
+AdminAPI -> Log: Записать событие (входы/изменения ролей/блокировки) (FR-26)
+Log --> AdminAPI: OK
+AdminAPI --> UI: 200 OK
+UI --> Admin: Пользователь заблокирован
+
+== Попытка входа заблокированного пользователя ==
+
+actor "Пользователь" as User
+User -> UI: Ввести логин/пароль
+UI -> Auth: POST /login
+Auth -> DB: Проверка статуса пользователя
+DB --> Auth: status=blocked
+Auth --> UI: 403 Forbidden (blocked)
+UI --> User: Сообщение: аккаунт заблокирован
+
+@enduml
